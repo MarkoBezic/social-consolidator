@@ -6,6 +6,22 @@ class TwitterFeed extends Component {
   state = {
     twitterUser: '',
     tempTwitterUser: '',
+    twitterUserDocId: '',
+  }
+
+  getUserFromDatabase = async () => {
+    await userDataRef.get().then(querySnapshot => {
+      querySnapshot.forEach(doc => {
+        this.setState({
+          twitterUser: doc.data().twitterId,
+          twitterUserDocId: doc.id,
+        })
+      })
+    })
+  }
+
+  componentDidMount = () => {
+    this.getUserFromDatabase()
   }
 
   handleUserInput = e => {
@@ -28,11 +44,22 @@ class TwitterFeed extends Component {
     this.setState({
       twitterUser: this.state.tempTwitterUser,
     })
+    this.getUserFromDatabase()
   }
 
-  handleChangeUser = () => {
+  handleRemoveUser = () => {
+    userDataRef
+      .doc(this.state.twitterUserDocId)
+      .delete()
+      .then(() => {
+        console.log('Document successfully deleted!')
+      })
+      .catch(error => {
+        console.error('Error removing document: ', error)
+      })
     this.setState({
       twitterUser: '',
+      twitterUserDocId: '',
     })
   }
 
@@ -53,9 +80,9 @@ class TwitterFeed extends Component {
             <button
               className="btn btn-primary mx-1"
               type="submit"
-              onClick={this.handleChangeUser}
+              onClick={this.handleRemoveUser}
             >
-              Change account
+              Remove account
             </button>
           </div>
         ) : (
