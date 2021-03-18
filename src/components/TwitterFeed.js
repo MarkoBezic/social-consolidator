@@ -24,6 +24,10 @@ class TwitterFeed extends Component {
     this.getUserFromDatabase()
   }
 
+  componentDidUpdate = () => {
+    this.getUserFromDatabase()
+  }
+
   handleUserInput = e => {
     e.preventDefault()
     this.setState({
@@ -38,17 +42,8 @@ class TwitterFeed extends Component {
     userDataRef.doc().set(userObject)
   }
 
-  handleSubmit = e => {
-    e.preventDefault()
-    this.createUserRecordInFirebase()
-    this.setState({
-      twitterUser: this.state.tempTwitterUser,
-    })
-    this.getUserFromDatabase()
-  }
-
-  handleRemoveUser = () => {
-    userDataRef
+  handleRemoveUser = async () => {
+    await userDataRef
       .doc(this.state.twitterUserDocId)
       .delete()
       .then(() => {
@@ -59,8 +54,31 @@ class TwitterFeed extends Component {
       })
     this.setState({
       twitterUser: '',
+      tempTwitterUser: '',
       twitterUserDocId: '',
     })
+  }
+
+  handleUpdateUser = () => {
+    this.setState({
+      tempTwitterUser: this.state.twitterUser,
+      twitterUser: '',
+    })
+    return userDataRef.doc(this.state.twitterUserDocId).update({
+      twitterId: this.state.tempTwitterUser,
+    })
+  }
+
+  handleSubmit = e => {
+    e.preventDefault()
+    this.state.twitterUserDocId
+      ? this.handleUpdateUser()
+      : this.createUserRecordInFirebase()
+    this.setState({
+      twitterUser: this.state.tempTwitterUser,
+      tempTwitterUser: '',
+    })
+    this.getUserFromDatabase()
   }
 
   render() {
@@ -77,6 +95,13 @@ class TwitterFeed extends Component {
                 height: '500',
               }}
             />
+            <button
+              className="btn btn-primary mx-1"
+              type="submit"
+              onClick={this.handleUpdateUser}
+            >
+              Update account name
+            </button>
             <button
               className="btn btn-primary mx-1"
               type="submit"
